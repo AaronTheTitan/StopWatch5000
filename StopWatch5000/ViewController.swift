@@ -19,14 +19,24 @@ class ViewController: UIViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    // Do any additional setup after loading the view, typically from a nib.
+    timeLabel.text = dateStringFromTimeInterval(0)
   }
 
   // Method Stubs
   func start() {
     if timer == nil {
-      startTime = NSDate()
       timer = NSTimer.scheduledTimerWithTimeInterval(0.01, target: self, selector: Selector("updateTimer:"), userInfo: nil, repeats: true)
+
+      if stopTime != nil { // calculate the duration elapsted from start to stop, then subtract from new start time
+        var duration = stopTime?.timeIntervalSinceDate(startTime!)
+        startTime = NSDate(timeInterval: -duration!, sinceDate: NSDate())
+      } else { // new start time
+        startTime = NSDate()
+      }
+
+    } else {
+      // don't start a timer
+
     }
   }
 
@@ -37,20 +47,19 @@ class ViewController: UIViewController {
 
     if let startTime = startTime {
       var duration = currentTime?.timeIntervalSinceDate(startTime)
-//      println("duration: \(duration)")
-//      timeLabel.text = duration?.description
-
-      var dateFormatter = NSDateFormatter()
-      dateFormatter.dateFormat = "HH:mm:ss:SS"
-//      timeLabel.text = dateFormatter.stringFromDate(currentTime!)
-
-      dateFormatter.timeZone = NSTimeZone(name: "UTC")
-
-      var date = NSDate(timeIntervalSince1970: duration!)
-      timeLabel.text = dateFormatter.stringFromDate(date)
-      
+      timeLabel.text = dateStringFromTimeInterval(duration!)
     }
 
+  }
+
+  func dateStringFromTimeInterval(timeInterval: NSTimeInterval) -> String{
+    var dateFormatter = NSDateFormatter()
+    dateFormatter.dateFormat = "HH:mm:ss:SS"
+    dateFormatter.timeZone = NSTimeZone(name: "UTC")
+
+    var date = NSDate(timeIntervalSince1970: timeInterval)
+
+    return dateFormatter.stringFromDate(date)
   }
 
   func stop() {
@@ -63,7 +72,15 @@ class ViewController: UIViewController {
   }
 
   func reset() {
+    // Stop the timer
+    timer?.invalidate()
+    timer = nil
 
+    startTime = nil
+    stopTime = nil
+    currentTime = nil
+
+    timeLabel.text = dateStringFromTimeInterval(0)
   }
 
   @IBAction func startButtonPressed(sender: AnyObject) {
